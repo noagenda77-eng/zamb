@@ -17,7 +17,7 @@ let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
 let zombieAnimations = [];
-const targetZombieHeight = 1.03;
+const targetZombieHeight = 1.47;
 
 // Game state
 let gameStarted = false;
@@ -508,14 +508,6 @@ function updateZombies(delta) {
         // Check collision with player
         const distance = zombie.position.distanceTo(camera.position);
         if (distance < 2.1) {
-            const pushDirection = new THREE.Vector3();
-            pushDirection.subVectors(zombie.position, camera.position);
-            pushDirection.y = 0;
-            if (pushDirection.lengthSq() > 0) {
-                pushDirection.normalize();
-                zombie.position.copy(camera.position).add(pushDirection.multiplyScalar(2.1));
-                zombie.position.y = zombie.groundOffset ?? 0;
-            }
 
             health -= 19.5;
 
