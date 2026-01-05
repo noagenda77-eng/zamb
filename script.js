@@ -17,7 +17,7 @@ let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
 let zombieAnimations = [];
-const targetZombieHeight = 2.1;
+const targetZombieHeight = 1.47;
 
 // Game state
 let gameStarted = false;
@@ -360,7 +360,7 @@ function spawnZombie() {
 
     zombieGroup.health = 1;
     zombieGroup.maxHealth = zombieGroup.health;
-    zombieGroup.speed = (0.03 + (round * 0.005)) * 4;
+    zombieGroup.speed = (0.03 + (round * 0.005)) * 2.8;
     if (zombieAnimations.length > 0) {
         const mixer = new THREE.AnimationMixer(zombieGroup);
         const action = mixer.clipAction(zombieAnimations[0]);
