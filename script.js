@@ -457,7 +457,8 @@ function updateZombies() {
         const moveScale = stutterPhase > 0.2 ? 1 : 0;
         zombie.position.add(direction.multiplyScalar(zombie.speed * moveScale));
         zombie.position.y = 0;
-        zombie.lookAt(camera.position);
+        const lookTarget = new THREE.Vector3(camera.position.x, zombie.position.y, camera.position.z);
+        zombie.lookAt(lookTarget);
     });
 
     // Spawn zombies
