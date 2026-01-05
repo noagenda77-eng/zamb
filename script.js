@@ -103,8 +103,9 @@ function init() {
 
 function loadZombieModel() {
     const loader = new THREE.GLTFLoader();
+    loader.setCrossOrigin('anonymous');
     loader.load(
-        'http://www.domctorcheems.com/files/zombie.glb',
+        'https://www.domctorcheems.com/files/zombie.glb',
         gltf => {
             zombieModel = gltf.scene;
             zombieModel.traverse(child => {
@@ -113,6 +114,10 @@ function loadZombieModel() {
                     child.receiveShadow = true;
                 }
             });
+        },
+        undefined,
+        error => {
+            console.error('Failed to load zombie model.', error);
         }
     );
 }
