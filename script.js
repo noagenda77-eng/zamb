@@ -345,17 +345,22 @@ function spawnZombie() {
     const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
     const scale = targetZombieHeight / unscaledHeight;
     zombieGroup.scale.setScalar(scale);
-    const hitboxHeight = (targetZombieHeight * 1.2) / scale;
-    const hitboxWidth = (targetZombieHeight * 0.9) / scale;
-    const hitboxDepth = (targetZombieHeight * 0.9) / scale;
-    const hitboxGeometry = new THREE.BoxGeometry(hitboxWidth, hitboxHeight, hitboxDepth);
+    const hitboxWorldHeight = Math.max(targetZombieHeight * 1.2, 1.2);
+    const hitboxWorldWidth = Math.max(targetZombieHeight * 0.6, 0.6);
+    const hitboxWorldDepth = Math.max(targetZombieHeight * 0.6, 0.6);
+    const hitboxGeometry = new THREE.BoxGeometry(
+        hitboxWorldWidth,
+        hitboxWorldHeight,
+        hitboxWorldDepth
+    );
     const hitboxMaterial = new THREE.MeshBasicMaterial({
         color: 0xff0000,
         transparent: true,
         opacity: 0
     });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, hitboxHeight / 2, 0);
+    hitbox.position.set(0, hitboxWorldHeight / 2, 0);
+    hitbox.scale.setScalar(1 / scale);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
     zombieGroup.hitbox = hitbox;
@@ -427,7 +432,7 @@ function shoot() {
         if (!hitZombie) {
             const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
             const rayOrigin = camera.position.clone();
-            const hitRadius = targetZombieHeight * 0.6;
+            const hitRadius = Math.max(targetZombieHeight * 0.6, 0.6);
             for (const zombie of zombies) {
                 const toZombie = zombie.position.clone().sub(rayOrigin);
                 const projection = toZombie.dot(direction);
