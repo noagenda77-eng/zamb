@@ -106,20 +106,20 @@ function loadZombieModel() {
     const loader = new THREE.FBXLoader();
     const statusEl = document.getElementById('modelStatus');
     if (statusEl) {
-        statusEl.textContent = 'Loading zombie model from assets/zombies.fbx...';
+        statusEl.textContent = 'Loading zombie model from assets/zombie.fbx...';
     }
-    fetch('assets/zombies.fbx', { method: 'HEAD' })
+    fetch('assets/zombie.fbx', { method: 'HEAD' })
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             loader.load(
-                'assets/zombies.fbx',
+                'assets/zombie.fbx',
                 fbx => {
                     zombieModel = fbx;
                     zombieAnimations = fbx.animations || [];
                     if (statusEl) {
-                        statusEl.textContent = 'Zombie model loaded from assets/zombies.fbx.';
+                        statusEl.textContent = 'Zombie model loaded from assets/zombie.fbx.';
                     }
                     zombieModel.traverse(child => {
                         if (child.isMesh) {
@@ -133,7 +133,7 @@ function loadZombieModel() {
                 },
                 undefined,
                 error => {
-                    console.error('Failed to load zombie model from assets/zombies.fbx.', error);
+                    console.error('Failed to load zombie model from assets/zombie.fbx.', error);
                     if (statusEl) {
                         statusEl.textContent = 'Zombie model failed to load. Check console for details.';
                     }
@@ -143,7 +143,7 @@ function loadZombieModel() {
         .catch(error => {
             console.error('Zombie model file missing or unreachable.', error);
             if (statusEl) {
-                statusEl.textContent = 'Missing assets/zombies.fbx. Add the file to the assets folder.';
+                statusEl.textContent = 'Missing assets/zombie.fbx. Add the file to the assets folder.';
             }
         });
 }
