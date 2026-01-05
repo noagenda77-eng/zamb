@@ -330,19 +330,28 @@ function updateZombies() {
         direction.y = 0;
         direction.normalize();
 
-        zombie.position.add(direction.multiplyScalar(zombie.speed));
-        zombie.lookAt(camera.position);
-
         // Check collision with player
         const distance = zombie.position.distanceTo(camera.position);
-        if (distance < 2) {
-            health -= 0.1;
+        if (distance < 1.8) {
+            const pushDirection = new THREE.Vector3();
+            pushDirection.subVectors(zombie.position, camera.position);
+            pushDirection.y = 0;
+            if (pushDirection.lengthSq() > 0) {
+                pushDirection.normalize();
+                zombie.position.copy(camera.position).add(pushDirection.multiplyScalar(1.8));
+            }
+
+            health -= 0.3;
             document.getElementById('healthValue').textContent = Math.floor(health);
 
             if (health <= 0) {
                 endGame();
             }
+            return;
         }
+
+        zombie.position.add(direction.multiplyScalar(zombie.speed));
+        zombie.lookAt(camera.position);
     });
 
     // Spawn zombies
@@ -368,12 +377,27 @@ function updateMovement() {
     velocity.z -= velocity.z * 10.0 * delta;
     velocity.y -= 9.8 * 10.0 * delta;
 
-    direction.z = Number(moveForward) - Number(moveBackward);
-    direction.x = Number(moveRight) - Number(moveLeft);
-    direction.normalize();
+    const moveZ = Number(moveForward) - Number(moveBackward);
+    const moveX = Number(moveRight) - Number(moveLeft);
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3(0, 1, 0);
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+    right.crossVectors(forward, up).normalize();
 
-    if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
-    if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
+    direction.set(0, 0, 0);
+    direction.addScaledVector(forward, moveZ);
+    direction.addScaledVector(right, moveX);
+    if (direction.lengthSq() > 0) {
+        direction.normalize();
+    }
+
+    if (moveForward || moveBackward || moveLeft || moveRight) {
+        velocity.z -= direction.z * 40.0 * delta;
+        velocity.x -= direction.x * 40.0 * delta;
+    }
 
     camera.position.x += velocity.x * delta;
     camera.position.z += velocity.z * delta;
