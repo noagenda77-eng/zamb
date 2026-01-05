@@ -390,22 +390,33 @@ function shoot() {
 
         // Muzzle flash
         createMuzzleFlash();
+        createTracer();
     }
 }
 
 function createMuzzleFlash() {
-    const flashGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-    const flashMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffaa00,
-        transparent: true,
-        opacity: 1
-    });
-    const flash = new THREE.Mesh(flashGeometry, flashMaterial);
-    flash.position.copy(camera.position);
-    flash.position.add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(1));
-    scene.add(flash);
+    const flashLight = new THREE.PointLight(0xffcc88, 2, 6);
+    flashLight.position.copy(camera.position);
+    flashLight.position.add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
+    scene.add(flashLight);
 
-    setTimeout(() => scene.remove(flash), 50);
+    setTimeout(() => scene.remove(flashLight), 50);
+}
+
+function createTracer() {
+    const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
+    const start = camera.position.clone().add(direction.clone().multiplyScalar(0.6));
+    const end = start.clone().add(direction.multiplyScalar(12));
+    const tracerGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const tracerMaterial = new THREE.LineBasicMaterial({
+        color: 0xffdd88,
+        transparent: true,
+        opacity: 0.9
+    });
+    const tracer = new THREE.Line(tracerGeometry, tracerMaterial);
+    scene.add(tracer);
+
+    setTimeout(() => scene.remove(tracer), 60);
 }
 
 function reload() {
@@ -451,7 +462,7 @@ function updateZombies() {
                 zombie.position.y = 0;
             }
 
-            health -= 2.2;
+            health -= 6.5;
 
             if (health <= 0) {
                 endGame();
