@@ -85,16 +85,13 @@ body {
     letter-spacing: 3px;
 }
 
-#health {
+#damageOverlay {
     position: fixed;
-    bottom: 30px;
-    left: 30px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 48px;
-    color: #ff5050;
-    text-shadow: 0 0 20px rgba(255, 80, 80, 0.8),
-                 0 4px 8px rgba(0, 0, 0, 0.8);
-    z-index: 100;
+    inset: 0;
+    background: rgba(255, 0, 0, 0);
+    pointer-events: none;
+    z-index: 500;
+    transition: background 0.1s linear;
 }
 
 #kills {

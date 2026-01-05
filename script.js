@@ -22,6 +22,10 @@ let zombiesThisRound = 6;
 let zombiesSpawned = 0;
 let zombiesKilled = 0;
 let health = 100;
+const maxHealth = 100;
+const healthRegenRate = 6;
+const overlayMinOpacity = 0.05;
+const overlayMaxOpacity = 0.75;
 let currentAmmo = 30;
 let reserveAmmo = 120;
 let reloading = false;
@@ -425,8 +429,7 @@ function nextRound() {
     zombiesThisRound = Math.floor(6 + (round * 1.5));
     document.getElementById('roundNumber').textContent = round;
 
-    health = Math.min(100, health + 20);
-    document.getElementById('healthValue').textContent = Math.floor(health);
+    health = Math.min(maxHealth, health + 20);
 }
 
 function updateZombies() {
@@ -448,8 +451,7 @@ function updateZombies() {
                 zombie.position.y = 0;
             }
 
-            health -= 0.75;
-            document.getElementById('healthValue').textContent = Math.floor(health);
+            health -= 2.2;
 
             if (health <= 0) {
                 endGame();
@@ -482,8 +484,7 @@ function updateLights() {
     });
 }
 
-function updateMovement() {
-    const delta = clock.getDelta();
+function updateMovement(delta) {
     velocity.x -= velocity.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
     velocity.y -= 6.5 * 10.0 * delta;
@@ -615,14 +616,31 @@ function startGame() {
     animate();
 }
 
+function updateDamageOverlay() {
+    const damageRatio = Math.min(1, Math.max(0, (maxHealth - health) / maxHealth));
+    const overlayOpacity = overlayMinOpacity + damageRatio * (overlayMaxOpacity - overlayMinOpacity);
+    document.getElementById('damageOverlay').style.background = `rgba(255, 0, 0, ${overlayOpacity.toFixed(3)})`;
+}
+
+function updateHealthRegen(delta) {
+    if (health <= 0 || health >= maxHealth) {
+        return;
+    }
+
+    health = Math.min(maxHealth, health + healthRegenRate * delta);
+}
+
 function animate() {
     if (!gameStarted || gameOver) return;
 
     requestAnimationFrame(animate);
 
-    updateMovement();
+    const delta = clock.getDelta();
+    updateMovement(delta);
     updateZombies();
     updateLights();
+    updateHealthRegen(delta);
+    updateDamageOverlay();
 
     renderer.render(scene, camera);
 }
