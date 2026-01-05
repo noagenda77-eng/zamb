@@ -263,9 +263,9 @@ function createDebris() {
 function spawnZombie() {
     const zombieGroup = new THREE.Group();
     const zombieMaterial = new THREE.MeshStandardMaterial({
-        color: 0x3f6b3f,
-        emissive: 0x2b4a2b,
-        emissiveIntensity: 0.2
+        color: 0x4a4a4f,
+        emissive: 0x1a1a1d,
+        emissiveIntensity: 0.15
     });
 
     const torsoGeometry = new THREE.BoxGeometry(0.9, 1.1, 0.5);
@@ -277,6 +277,20 @@ function spawnZombie() {
     const head = new THREE.Mesh(headGeometry, zombieMaterial);
     head.position.set(0, 1.95, 0.05);
     zombieGroup.add(head);
+
+    const eyeGeometry = new THREE.SphereGeometry(0.06, 12, 12);
+    const eyeMaterial = new THREE.MeshStandardMaterial({
+        color: 0xff4d4d,
+        emissive: 0xff2d2d,
+        emissiveIntensity: 1.2
+    });
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(-0.1, 2.0, 0.32);
+    zombieGroup.add(leftEye);
+
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(0.1, 2.0, 0.32);
+    zombieGroup.add(rightEye);
 
     const armGeometry = new THREE.BoxGeometry(0.2, 0.8, 0.2);
     const leftArm = new THREE.Mesh(armGeometry, zombieMaterial);
@@ -303,7 +317,7 @@ function spawnZombie() {
     const distance = 30 + Math.random() * 20;
     zombieGroup.position.set(
         Math.cos(angle) * distance,
-        1,
+        0,
         Math.sin(angle) * distance
     );
 
@@ -534,7 +548,7 @@ function onKeyDown(event) {
             break;
         case 'Space':
             if (canJump) {
-                velocity.y += 8;
+                velocity.y += 12;
                 canJump = false;
             }
             break;
