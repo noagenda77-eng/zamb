@@ -12,6 +12,8 @@ let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let raycaster = new THREE.Raycaster();
 let weapon;
+let weaponBarrel;
+let gunshotAudio;
 
 // Game state
 let gameStarted = false;
@@ -29,6 +31,10 @@ const overlayMaxOpacity = 0.75;
 let currentAmmo = 30;
 let reserveAmmo = 120;
 let reloading = false;
+let sprinting = false;
+const sprintMultiplier = 1.6;
+const fireCooldownMs = 1000;
+let lastShotTime = 0;
 
 const clock = new THREE.Clock();
 
@@ -69,6 +75,8 @@ function init() {
     createStreetLights();
     createDebris();
     createWeapon();
+    gunshotAudio = new Audio('assets/gunshot.mp3');
+    gunshotAudio.volume = 0.7;
 
     // Mouse lock
     renderer.domElement.addEventListener('click', () => {
@@ -112,6 +120,7 @@ function createWeapon() {
     barrel.rotation.x = Math.PI / 2;
     barrel.position.set(0.18, -0.12, -0.95);
     weaponGroup.add(barrel);
+    weaponBarrel = barrel;
 
     const gripGeometry = new THREE.BoxGeometry(0.12, 0.25, 0.18);
     const gripMaterial = new THREE.MeshStandardMaterial({
@@ -347,7 +356,13 @@ function spawnZombie() {
 }
 
 function shoot() {
+    const now = performance.now();
+    if (now - lastShotTime < fireCooldownMs) {
+        return;
+    }
+
     if (currentAmmo > 0 && !reloading) {
+        lastShotTime = now;
         currentAmmo--;
         updateAmmoDisplay();
 
@@ -391,13 +406,21 @@ function shoot() {
         // Muzzle flash
         createMuzzleFlash();
         createTracer();
+        if (gunshotAudio) {
+            gunshotAudio.currentTime = 0;
+            gunshotAudio.play().catch(() => {});
+        }
     }
 }
 
 function createMuzzleFlash() {
     const flashLight = new THREE.PointLight(0xffcc88, 2, 6);
-    flashLight.position.copy(camera.position);
-    flashLight.position.add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
+    if (weaponBarrel) {
+        weaponBarrel.getWorldPosition(flashLight.position);
+    } else {
+        flashLight.position.copy(camera.position);
+        flashLight.position.add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.6));
+    }
     scene.add(flashLight);
 
     setTimeout(() => scene.remove(flashLight), 50);
@@ -405,7 +428,12 @@ function createMuzzleFlash() {
 
 function createTracer() {
     const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
-    const start = camera.position.clone().add(direction.clone().multiplyScalar(0.6));
+    const start = new THREE.Vector3();
+    if (weaponBarrel) {
+        weaponBarrel.getWorldPosition(start);
+    } else {
+        start.copy(camera.position).add(direction.clone().multiplyScalar(0.6));
+    }
     const end = start.clone().add(direction.multiplyScalar(24));
     const tracerGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
     const tracerMaterial = new THREE.LineBasicMaterial({
@@ -518,8 +546,9 @@ function updateMovement(delta) {
     }
 
     if (moveForward || moveBackward || moveLeft || moveRight) {
-        velocity.z -= direction.z * 40.0 * delta;
-        velocity.x -= direction.x * 40.0 * delta;
+        const speedMultiplier = sprinting ? sprintMultiplier : 1;
+        velocity.z -= direction.z * 40.0 * speedMultiplier * delta;
+        velocity.x -= direction.x * 40.0 * speedMultiplier * delta;
     }
 
     camera.position.x += velocity.x * delta;
@@ -575,6 +604,10 @@ function onKeyDown(event) {
                 canJump = false;
             }
             break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+            sprinting = true;
+            break;
         case 'KeyR':
             reload();
             break;
@@ -596,6 +629,10 @@ function onKeyUp(event) {
             break;
         case 'KeyD':
             moveRight = false;
+            break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+            sprinting = false;
             break;
         default:
             break;
