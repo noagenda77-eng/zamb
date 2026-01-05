@@ -16,7 +16,7 @@ let weapon;
 let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
-let zombieModelScale = 1.3;
+const targetZombieHeight = 2.1;
 
 // Game state
 let gameStarted = false;
@@ -134,6 +134,9 @@ function loadZombieModel() {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        if (child.material) {
+                            child.material.side = THREE.DoubleSide;
+                        }
                     }
                 });
             },
@@ -335,7 +338,11 @@ function spawnZombie() {
     const zombieGroup = THREE.SkeletonUtils
         ? THREE.SkeletonUtils.clone(zombieModel)
         : zombieModel.clone(true);
-    zombieGroup.scale.setScalar(zombieModelScale);
+
+    const unscaledBounds = new THREE.Box3().setFromObject(zombieGroup);
+    const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
+    const scale = targetZombieHeight / unscaledHeight;
+    zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
 
