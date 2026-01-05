@@ -378,6 +378,9 @@ function spawnZombie() {
     if (zombieAnimations.length > 0) {
         const mixer = new THREE.AnimationMixer(zombieGroup);
         const action = mixer.clipAction(zombieAnimations[0]);
+        action.reset();
+        action.setLoop(THREE.LoopRepeat);
+        action.clampWhenFinished = false;
         action.play();
         zombieGroup.mixer = mixer;
     }
