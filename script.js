@@ -400,10 +400,21 @@ function shoot() {
 
         // Raycast from camera
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const intersects = raycaster.intersectObjects(zombies, true);
+        const zombieMeshes = [];
+        zombies.forEach(zombie => {
+            zombie.traverse(child => {
+                if (child.isMesh) {
+                    zombieMeshes.push(child);
+                }
+            });
+        });
+        const intersects = raycaster.intersectObjects(zombieMeshes, true);
 
         if (intersects.length > 0) {
             let zombie = intersects[0].object;
+            if (zombie.userData.isHitbox && zombie.parent) {
+                zombie = zombie.parent;
+            }
             hitPoint = intersects[0].point.clone();
             while (zombie && !zombies.includes(zombie)) {
                 zombie = zombie.parent;
