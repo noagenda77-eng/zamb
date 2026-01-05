@@ -17,7 +17,7 @@ let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
 let zombieAnimations = [];
-const targetZombieHeight = 0.0147;
+const targetZombieHeight = 0.00735;
 
 // Game state
 let gameStarted = false;
