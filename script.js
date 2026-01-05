@@ -16,6 +16,7 @@ let weapon;
 let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
+let zombieAnimations = [];
 const targetZombieHeight = 2.1;
 
 // Game state
@@ -127,6 +128,7 @@ function loadZombieModel() {
             source,
             gltf => {
                 zombieModel = gltf.scene;
+                zombieAnimations = gltf.animations || [];
                 if (statusEl) {
                     statusEl.textContent = `Zombie model loaded from ${source}.`;
                 }
@@ -361,6 +363,12 @@ function spawnZombie() {
     zombieGroup.speed = (0.03 + (round * 0.005)) * 4;
     zombieGroup.stutterOffset = Math.random() * Math.PI * 2;
     zombieGroup.stutterSpeed = 6 + Math.random() * 3;
+    if (zombieAnimations.length > 0) {
+        const mixer = new THREE.AnimationMixer(zombieGroup);
+        const action = mixer.clipAction(zombieAnimations[0]);
+        action.play();
+        zombieGroup.mixer = mixer;
+    }
 
     scene.add(zombieGroup);
     zombies.push(zombieGroup);
@@ -492,8 +500,11 @@ function nextRound() {
     health = Math.min(maxHealth, health + 20);
 }
 
-function updateZombies() {
+function updateZombies(delta) {
     zombies.forEach(zombie => {
+        if (zombie.mixer) {
+            zombie.mixer.update(delta);
+        }
         const direction = new THREE.Vector3();
         direction.subVectors(camera.position, zombie.position);
         direction.y = 0;
@@ -749,7 +760,7 @@ function animate() {
 
     const delta = clock.getDelta();
     updateMovement(delta);
-    updateZombies();
+    updateZombies(delta);
     updateLights();
     updateGibs(delta);
     updateHealthRegen(delta);
