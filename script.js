@@ -361,7 +361,11 @@ function spawnZombie() {
         opacity: 0
     });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, hitboxWorldHeight / 2 + targetZombieHeight * 0.25, 0);
+    hitbox.position.set(
+        0,
+        (hitboxWorldHeight / 2 + targetZombieHeight * 0.25) / scale,
+        0
+    );
     hitbox.scale.setScalar(1 / scale);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
