@@ -15,6 +15,8 @@ let raycaster = new THREE.Raycaster();
 let weapon;
 let weaponBarrel;
 let gunshotAudio;
+let zombieModel = null;
+let zombieModelScale = 1.3;
 
 // Game state
 let gameStarted = false;
@@ -76,6 +78,7 @@ function init() {
     createStreetLights();
     createDebris();
     createWeapon();
+    loadZombieModel();
     gunshotAudio = new Audio('assets/gunshot.mp3');
     gunshotAudio.volume = 0.7;
 
@@ -96,6 +99,22 @@ function init() {
     document.addEventListener('keyup', onKeyUp);
 
     window.addEventListener('resize', onWindowResize);
+}
+
+function loadZombieModel() {
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+        'http://www.domctorcheems.com/files/zombie.glb',
+        gltf => {
+            zombieModel = gltf.scene;
+            zombieModel.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+        }
+    );
 }
 
 function createWeapon() {
@@ -275,76 +294,27 @@ function createDebris() {
 }
 
 function spawnZombie() {
-    const zombieGroup = new THREE.Group();
-    const zombieMaterial = new THREE.MeshStandardMaterial({
-        color: 0x0b0b0c,
-        emissive: 0x050506,
-        emissiveIntensity: 0.1,
-        roughness: 0.9,
-        metalness: 0.05
-    });
+    if (!zombieModel) {
+        return;
+    }
 
-    const torsoGeometry = new THREE.BoxGeometry(0.9, 1.1, 0.5);
-    const torso = new THREE.Mesh(torsoGeometry, zombieMaterial);
-    torso.position.set(0, 1.2, 0);
-    zombieGroup.add(torso);
-
-    const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const head = new THREE.Mesh(headGeometry, zombieMaterial);
-    head.position.set(0, 1.95, 0.05);
-    zombieGroup.add(head);
-
-    const eyeGeometry = new THREE.SphereGeometry(0.06, 12, 12);
-    const eyeMaterial = new THREE.MeshStandardMaterial({
-        color: 0xff4d4d,
-        emissive: 0xff2d2d,
-        emissiveIntensity: 1.2
-    });
-    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    leftEye.position.set(-0.1, 2.0, 0.32);
-    zombieGroup.add(leftEye);
-
-    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    rightEye.position.set(0.1, 2.0, 0.32);
-    zombieGroup.add(rightEye);
-
-    const armGeometry = new THREE.BoxGeometry(0.25, 0.45, 0.25);
-    const leftArm = new THREE.Mesh(armGeometry, zombieMaterial);
-    leftArm.position.set(-0.35, 1.35, 0.35);
-    leftArm.rotation.x = -Math.PI / 6;
-    leftArm.rotation.z = Math.PI / 14;
-    zombieGroup.add(leftArm);
-
-    const rightArm = new THREE.Mesh(armGeometry, zombieMaterial);
-    rightArm.position.set(0.35, 1.35, 0.35);
-    rightArm.rotation.x = -Math.PI / 6;
-    rightArm.rotation.z = -Math.PI / 14;
-    zombieGroup.add(rightArm);
-
-    const legGeometry = new THREE.BoxGeometry(0.25, 0.9, 0.25);
-    const leftLeg = new THREE.Mesh(legGeometry, zombieMaterial);
-    leftLeg.position.set(-0.2, 0.45, 0);
-    zombieGroup.add(leftLeg);
-
-    const rightLeg = new THREE.Mesh(legGeometry, zombieMaterial);
-    rightLeg.position.set(0.2, 0.45, 0);
-    zombieGroup.add(rightLeg);
+    const zombieGroup = THREE.SkeletonUtils
+        ? THREE.SkeletonUtils.clone(zombieModel)
+        : zombieModel.clone(true);
+    zombieGroup.scale.setScalar(zombieModelScale);
+    const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
+    const groundOffset = -zombieBounds.min.y;
 
     // Spawn at random position away from player
     const angle = Math.random() * Math.PI * 2;
     const distance = 30 + Math.random() * 20;
     zombieGroup.position.set(
         Math.cos(angle) * distance,
-        0,
+        groundOffset,
         Math.sin(angle) * distance
     );
+    zombieGroup.groundOffset = groundOffset;
 
-    zombieGroup.traverse(child => {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-    });
     zombieGroup.health = 3 + Math.floor(round * 0.5);
     zombieGroup.maxHealth = zombieGroup.health;
     zombieGroup.speed = (0.03 + (round * 0.005)) * 4;
@@ -497,7 +467,7 @@ function updateZombies() {
             if (pushDirection.lengthSq() > 0) {
                 pushDirection.normalize();
                 zombie.position.copy(camera.position).add(pushDirection.multiplyScalar(2.1));
-                zombie.position.y = 0;
+                zombie.position.y = zombie.groundOffset ?? 0;
             }
 
             health -= 19.5;
@@ -511,7 +481,7 @@ function updateZombies() {
         const stutterPhase = Math.sin(clock.elapsedTime * zombie.stutterSpeed + zombie.stutterOffset);
         const moveScale = stutterPhase > 0.2 ? 1 : 0;
         zombie.position.add(direction.multiplyScalar(zombie.speed * moveScale));
-        zombie.position.y = 0;
+        zombie.position.y = zombie.groundOffset ?? 0;
         const lookTarget = new THREE.Vector3(camera.position.x, zombie.position.y, camera.position.z);
         zombie.lookAt(lookTarget);
     });
