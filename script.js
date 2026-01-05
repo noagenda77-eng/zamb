@@ -345,6 +345,8 @@ function spawnZombie() {
     const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
     const scale = targetZombieHeight / unscaledHeight;
     zombieGroup.scale.setScalar(scale);
+    const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
+    const groundOffset = -zombieBounds.min.y;
     const hitboxWorldHeight = Math.max(targetZombieHeight * 1.2, 1.2);
     const hitboxWorldWidth = Math.max(targetZombieHeight * 0.6, 0.6);
     const hitboxWorldDepth = Math.max(targetZombieHeight * 0.6, 0.6);
@@ -359,13 +361,11 @@ function spawnZombie() {
         opacity: 0
     });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, hitboxWorldHeight * 0.65, 0);
+    hitbox.position.set(0, hitboxWorldHeight / 2 + targetZombieHeight * 0.25, 0);
     hitbox.scale.setScalar(1 / scale);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
     zombieGroup.hitbox = hitbox;
-    const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
-    const groundOffset = -zombieBounds.min.y;
 
     // Spawn at random position away from player
     const angle = Math.random() * Math.PI * 2;
