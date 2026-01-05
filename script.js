@@ -361,8 +361,6 @@ function spawnZombie() {
     zombieGroup.health = 1;
     zombieGroup.maxHealth = zombieGroup.health;
     zombieGroup.speed = (0.03 + (round * 0.005)) * 4;
-    zombieGroup.stutterOffset = Math.random() * Math.PI * 2;
-    zombieGroup.stutterSpeed = 6 + Math.random() * 3;
     if (zombieAnimations.length > 0) {
         const mixer = new THREE.AnimationMixer(zombieGroup);
         const action = mixer.clipAction(zombieAnimations[0]);
@@ -530,9 +528,7 @@ function updateZombies(delta) {
             return;
         }
 
-        const stutterPhase = Math.sin(clock.elapsedTime * zombie.stutterSpeed + zombie.stutterOffset);
-        const moveScale = stutterPhase > 0.2 ? 1 : 0;
-        zombie.position.add(direction.multiplyScalar(zombie.speed * moveScale));
+        zombie.position.add(direction.multiplyScalar(zombie.speed));
         zombie.position.y = zombie.groundOffset ?? 0;
         const lookTarget = new THREE.Vector3(camera.position.x, zombie.position.y, camera.position.z);
         zombie.lookAt(lookTarget);
