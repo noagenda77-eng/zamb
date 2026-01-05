@@ -358,7 +358,7 @@ function spawnZombie() {
     );
     zombieGroup.groundOffset = groundOffset;
 
-    zombieGroup.health = 3 + Math.floor(round * 0.5);
+    zombieGroup.health = 1;
     zombieGroup.maxHealth = zombieGroup.health;
     zombieGroup.speed = (0.03 + (round * 0.005)) * 4;
     zombieGroup.stutterOffset = Math.random() * Math.PI * 2;
