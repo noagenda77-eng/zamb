@@ -108,32 +108,44 @@ function loadZombieModel() {
     if (statusEl) {
         statusEl.textContent = 'Loading zombie model from assets/zombies.fbx...';
     }
-    loader.load(
-        'assets/zombies.fbx',
-        fbx => {
-            zombieModel = fbx;
-            zombieAnimations = fbx.animations || [];
-            if (statusEl) {
-                statusEl.textContent = 'Zombie model loaded from assets/zombies.fbx.';
+    fetch('assets/zombies.fbx', { method: 'HEAD' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
-            zombieModel.traverse(child => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    if (child.material) {
-                        child.material.side = THREE.DoubleSide;
+            loader.load(
+                'assets/zombies.fbx',
+                fbx => {
+                    zombieModel = fbx;
+                    zombieAnimations = fbx.animations || [];
+                    if (statusEl) {
+                        statusEl.textContent = 'Zombie model loaded from assets/zombies.fbx.';
+                    }
+                    zombieModel.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            if (child.material) {
+                                child.material.side = THREE.DoubleSide;
+                            }
+                        }
+                    });
+                },
+                undefined,
+                error => {
+                    console.error('Failed to load zombie model from assets/zombies.fbx.', error);
+                    if (statusEl) {
+                        statusEl.textContent = 'Zombie model failed to load. Check console for details.';
                     }
                 }
-            });
-        },
-        undefined,
-        error => {
-            console.error('Failed to load zombie model from assets/zombies.fbx.', error);
+            );
+        })
+        .catch(error => {
+            console.error('Zombie model file missing or unreachable.', error);
             if (statusEl) {
-                statusEl.textContent = 'Zombie model failed to load. Check console for details.';
+                statusEl.textContent = 'Missing assets/zombies.fbx. Add the file to the assets folder.';
             }
-        }
-    );
+        });
 }
 
 function createWeapon() {
