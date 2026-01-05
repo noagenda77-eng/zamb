@@ -360,7 +360,7 @@ function spawnZombie() {
 
     zombieGroup.health = 1;
     zombieGroup.maxHealth = zombieGroup.health;
-    zombieGroup.speed = (0.03 + (round * 0.005)) * 1.2;
+    zombieGroup.speed = (0.03 + (round * 0.005)) * 0.3;
     if (zombieAnimations.length > 0) {
         const mixer = new THREE.AnimationMixer(zombieGroup);
         const action = mixer.clipAction(zombieAnimations[0]);
@@ -457,10 +457,7 @@ function createTracer(hitPoint) {
     }
     let end = start.clone().add(direction.clone().multiplyScalar(24));
     if (hitPoint) {
-        const toHit = hitPoint.clone().sub(start);
-        if (toHit.dot(direction) > 0.1) {
-            end = hitPoint.clone();
-        }
+        end = hitPoint.clone();
     }
     const tracerGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
     const tracerMaterial = new THREE.LineBasicMaterial({
