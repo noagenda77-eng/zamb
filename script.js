@@ -263,9 +263,11 @@ function createDebris() {
 function spawnZombie() {
     const zombieGroup = new THREE.Group();
     const zombieMaterial = new THREE.MeshStandardMaterial({
-        color: 0x4a4a4f,
-        emissive: 0x1a1a1d,
-        emissiveIntensity: 0.15
+        color: 0x0b0b0c,
+        emissive: 0x050506,
+        emissiveIntensity: 0.1,
+        roughness: 0.9,
+        metalness: 0.05
     });
 
     const torsoGeometry = new THREE.BoxGeometry(0.9, 1.1, 0.5);
@@ -292,15 +294,17 @@ function spawnZombie() {
     rightEye.position.set(0.1, 2.0, 0.32);
     zombieGroup.add(rightEye);
 
-    const armGeometry = new THREE.BoxGeometry(0.2, 0.8, 0.2);
+    const armGeometry = new THREE.BoxGeometry(0.25, 0.45, 0.25);
     const leftArm = new THREE.Mesh(armGeometry, zombieMaterial);
-    leftArm.position.set(-0.65, 1.35, 0);
-    leftArm.rotation.z = Math.PI / 10;
+    leftArm.position.set(-0.35, 1.35, 0.35);
+    leftArm.rotation.x = -Math.PI / 6;
+    leftArm.rotation.z = Math.PI / 14;
     zombieGroup.add(leftArm);
 
     const rightArm = new THREE.Mesh(armGeometry, zombieMaterial);
-    rightArm.position.set(0.65, 1.35, 0);
-    rightArm.rotation.z = -Math.PI / 10;
+    rightArm.position.set(0.35, 1.35, 0.35);
+    rightArm.rotation.x = -Math.PI / 6;
+    rightArm.rotation.z = -Math.PI / 14;
     zombieGroup.add(rightArm);
 
     const legGeometry = new THREE.BoxGeometry(0.25, 0.9, 0.25);
@@ -444,7 +448,7 @@ function updateZombies() {
                 zombie.position.y = 0;
             }
 
-            health -= 0.3;
+            health -= 0.75;
             document.getElementById('healthValue').textContent = Math.floor(health);
 
             if (health <= 0) {
