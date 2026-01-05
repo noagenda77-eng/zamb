@@ -344,6 +344,19 @@ function spawnZombie() {
     const unscaledBounds = new THREE.Box3().setFromObject(zombieGroup);
     const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
     const scale = targetZombieHeight / unscaledHeight;
+    const hitboxHeight = unscaledHeight * 0.9;
+    const hitboxWidth = unscaledHeight * 0.35;
+    const hitboxDepth = unscaledHeight * 0.35;
+    const hitboxGeometry = new THREE.BoxGeometry(hitboxWidth, hitboxHeight, hitboxDepth);
+    const hitboxMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0
+    });
+    const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+    hitbox.position.set(0, hitboxHeight / 2, 0);
+    hitbox.userData.isHitbox = true;
+    zombieGroup.add(hitbox);
     zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
