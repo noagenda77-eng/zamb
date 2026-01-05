@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+    background: #000;
+}
+
+#crosshair {
+    position: fixed;
+    width: 30px;
+    height: 30px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+#crosshair::before,
+#crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 80, 80, 0.9);
+    box-shadow: 0 0 8px rgba(255, 80, 80, 0.6);
+}
+
+#crosshair::before {
+    width: 2px;
+    height: 14px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#crosshair::after {
+    width: 14px;
+    height: 2px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#hud {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    color: #fff;
+    z-index: 100;
+    font-family: 'Bebas Neue', sans-serif;
+    text-align: right;
+}
+
+#ammo {
+    font-size: 72px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(255, 80, 80, 0.8),
+                 0 4px 8px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+}
+
+#ammo .separator {
+    font-size: 48px;
+    opacity: 0.6;
+    margin: 0 8px;
+}
+
+#round {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(80, 150, 255, 0.8),
+                 0 4px 8px rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    letter-spacing: 3px;
+}
+
+#health {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: #ff5050;
+    text-shadow: 0 0 20px rgba(255, 80, 80, 0.8),
+                 0 4px 8px rgba(0, 0, 0, 0.8);
+    z-index: 100;
+}
+
+#kills {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6),
+                 0 3px 6px rgba(0, 0, 0, 0.8);
+    z-index: 100;
+}
+
+#instructions {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 40px 60px;
+    border: 2px solid rgba(255, 80, 80, 0.5);
+    box-shadow: 0 0 40px rgba(255, 80, 80, 0.3);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    z-index: 300;
+    text-align: center;
+}
+
+#instructions h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    margin-bottom: 30px;
+    letter-spacing: 4px;
+    color: #ff5050;
+}
+
+#instructions p {
+    font-size: 24px;
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+#instructions button {
+    margin-top: 30px;
+    padding: 15px 50px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    background: linear-gradient(135deg, #ff5050, #ff8080);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 6px 15px rgba(255, 80, 80, 0.4);
+}
+
+#gameOver {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+#gameOver.show {
+    display: flex;
+}
+
+#gameOver h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 96px;
+    color: #ff5050;
+    text-shadow: 0 0 30px rgba(255, 80, 80, 0.8);
+    margin-bottom: 20px;
+    letter-spacing: 8px;
+}
+
+#gameOver p {
+    font-size: 32px;
+    color: #fff;
+    margin: 10px 0;
+}
+
+#gameOver button {
+    margin-top: 40px;
+    padding: 20px 60px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    background: linear-gradient(135deg, #ff5050, #ff8080);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 20px rgba(255, 80, 80, 0.4);
+}
