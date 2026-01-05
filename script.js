@@ -17,7 +17,7 @@ let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
 let zombieAnimations = [];
-const targetZombieHeight = 0.00735;
+const targetZombieHeight = 0.00588;
 
 // Game state
 let gameStarted = false;
@@ -359,7 +359,7 @@ function spawnZombie() {
         opacity: 0
     });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, hitboxWorldHeight / 2, 0);
+    hitbox.position.set(0, hitboxWorldHeight * 0.65, 0);
     hitbox.scale.setScalar(1 / scale);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
