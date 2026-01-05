@@ -11,6 +11,7 @@ let canJump = false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let raycaster = new THREE.Raycaster();
+let weapon;
 
 // Game state
 let gameStarted = false;
@@ -63,6 +64,7 @@ function init() {
     createBuildings();
     createStreetLights();
     createDebris();
+    createWeapon();
 
     // Mouse lock
     renderer.domElement.addEventListener('click', () => {
@@ -81,6 +83,46 @@ function init() {
     document.addEventListener('keyup', onKeyUp);
 
     window.addEventListener('resize', onWindowResize);
+}
+
+function createWeapon() {
+    const weaponGroup = new THREE.Group();
+
+    const bodyGeometry = new THREE.BoxGeometry(0.25, 0.18, 0.8);
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: 0x2b2b2f,
+        roughness: 0.6,
+        metalness: 0.3
+    });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.set(0.15, -0.15, -0.5);
+    weaponGroup.add(body);
+
+    const barrelGeometry = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 12);
+    const barrelMaterial = new THREE.MeshStandardMaterial({
+        color: 0x444450,
+        roughness: 0.4,
+        metalness: 0.6
+    });
+    const barrel = new THREE.Mesh(barrelGeometry, barrelMaterial);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0.18, -0.12, -0.95);
+    weaponGroup.add(barrel);
+
+    const gripGeometry = new THREE.BoxGeometry(0.12, 0.25, 0.18);
+    const gripMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1f,
+        roughness: 0.8,
+        metalness: 0.2
+    });
+    const grip = new THREE.Mesh(gripGeometry, gripMaterial);
+    grip.position.set(0.12, -0.32, -0.35);
+    weaponGroup.add(grip);
+
+    weaponGroup.position.set(0.35, -0.25, -0.6);
+    camera.add(weaponGroup);
+    scene.add(camera);
+    weapon = weaponGroup;
 }
 
 function createBuildings() {
@@ -219,30 +261,64 @@ function createDebris() {
 }
 
 function spawnZombie() {
-    const zombieGeometry = new THREE.BoxGeometry(1, 2, 1);
+    const zombieGroup = new THREE.Group();
     const zombieMaterial = new THREE.MeshStandardMaterial({
-        color: 0x3a5a3a,
-        emissive: 0x2a4a2a,
+        color: 0x3f6b3f,
+        emissive: 0x2b4a2b,
         emissiveIntensity: 0.2
     });
-    const zombie = new THREE.Mesh(zombieGeometry, zombieMaterial);
+
+    const torsoGeometry = new THREE.BoxGeometry(0.9, 1.1, 0.5);
+    const torso = new THREE.Mesh(torsoGeometry, zombieMaterial);
+    torso.position.set(0, 1.2, 0);
+    zombieGroup.add(torso);
+
+    const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const head = new THREE.Mesh(headGeometry, zombieMaterial);
+    head.position.set(0, 1.95, 0.05);
+    zombieGroup.add(head);
+
+    const armGeometry = new THREE.BoxGeometry(0.2, 0.8, 0.2);
+    const leftArm = new THREE.Mesh(armGeometry, zombieMaterial);
+    leftArm.position.set(-0.65, 1.35, 0);
+    leftArm.rotation.z = Math.PI / 10;
+    zombieGroup.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeometry, zombieMaterial);
+    rightArm.position.set(0.65, 1.35, 0);
+    rightArm.rotation.z = -Math.PI / 10;
+    zombieGroup.add(rightArm);
+
+    const legGeometry = new THREE.BoxGeometry(0.25, 0.9, 0.25);
+    const leftLeg = new THREE.Mesh(legGeometry, zombieMaterial);
+    leftLeg.position.set(-0.2, 0.45, 0);
+    zombieGroup.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeometry, zombieMaterial);
+    rightLeg.position.set(0.2, 0.45, 0);
+    zombieGroup.add(rightLeg);
 
     // Spawn at random position away from player
     const angle = Math.random() * Math.PI * 2;
     const distance = 30 + Math.random() * 20;
-    zombie.position.set(
+    zombieGroup.position.set(
         Math.cos(angle) * distance,
         1,
         Math.sin(angle) * distance
     );
 
-    zombie.castShadow = true;
-    zombie.health = 3 + Math.floor(round * 0.5);
-    zombie.maxHealth = zombie.health;
-    zombie.speed = 0.03 + (round * 0.005);
+    zombieGroup.traverse(child => {
+        if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+    zombieGroup.health = 3 + Math.floor(round * 0.5);
+    zombieGroup.maxHealth = zombieGroup.health;
+    zombieGroup.speed = 0.03 + (round * 0.005);
 
-    scene.add(zombie);
-    zombies.push(zombie);
+    scene.add(zombieGroup);
+    zombies.push(zombieGroup);
     zombiesSpawned++;
 }
 
@@ -253,16 +329,26 @@ function shoot() {
 
         // Raycast from camera
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const intersects = raycaster.intersectObjects(zombies);
+        const intersects = raycaster.intersectObjects(zombies, true);
 
         if (intersects.length > 0) {
-            const zombie = intersects[0].object;
+            let zombie = intersects[0].object;
+            while (zombie && !zombies.includes(zombie)) {
+                zombie = zombie.parent;
+            }
+            if (!zombie) {
+                return;
+            }
             zombie.health--;
 
             // Flash zombie when hit
-            zombie.material.emissiveIntensity = 1;
+            if (intersects[0].object.material) {
+                intersects[0].object.material.emissiveIntensity = 1;
+            }
             setTimeout(() => {
-                if (zombie.material) zombie.material.emissiveIntensity = 0.2;
+                if (intersects[0].object.material) {
+                    intersects[0].object.material.emissiveIntensity = 0.2;
+                }
             }, 100);
 
             if (zombie.health <= 0) {
@@ -377,7 +463,7 @@ function updateMovement() {
     velocity.z -= velocity.z * 10.0 * delta;
     velocity.y -= 9.8 * 10.0 * delta;
 
-    const moveZ = Number(moveForward) - Number(moveBackward);
+    const moveZ = Number(moveBackward) - Number(moveForward);
     const moveX = Number(moveRight) - Number(moveLeft);
     const forward = new THREE.Vector3();
     const right = new THREE.Vector3();
@@ -448,7 +534,7 @@ function onKeyDown(event) {
             break;
         case 'Space':
             if (canJump) {
-                velocity.y += 5;
+                velocity.y += 8;
                 canJump = false;
             }
             break;
