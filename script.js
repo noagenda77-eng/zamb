@@ -330,6 +330,8 @@ function spawnZombie() {
     zombieGroup.health = 3 + Math.floor(round * 0.5);
     zombieGroup.maxHealth = zombieGroup.health;
     zombieGroup.speed = 0.03 + (round * 0.005);
+    zombieGroup.stutterOffset = Math.random() * Math.PI * 2;
+    zombieGroup.stutterSpeed = 6 + Math.random() * 3;
 
     scene.add(zombieGroup);
     zombies.push(zombieGroup);
@@ -432,13 +434,14 @@ function updateZombies() {
 
         // Check collision with player
         const distance = zombie.position.distanceTo(camera.position);
-        if (distance < 1.8) {
+        if (distance < 2.1) {
             const pushDirection = new THREE.Vector3();
             pushDirection.subVectors(zombie.position, camera.position);
             pushDirection.y = 0;
             if (pushDirection.lengthSq() > 0) {
                 pushDirection.normalize();
-                zombie.position.copy(camera.position).add(pushDirection.multiplyScalar(1.8));
+                zombie.position.copy(camera.position).add(pushDirection.multiplyScalar(2.1));
+                zombie.position.y = 0;
             }
 
             health -= 0.3;
@@ -450,7 +453,10 @@ function updateZombies() {
             return;
         }
 
-        zombie.position.add(direction.multiplyScalar(zombie.speed));
+        const stutterPhase = Math.sin(clock.elapsedTime * zombie.stutterSpeed + zombie.stutterOffset);
+        const moveScale = stutterPhase > 0.2 ? 1 : 0;
+        zombie.position.add(direction.multiplyScalar(zombie.speed * moveScale));
+        zombie.position.y = 0;
         zombie.lookAt(camera.position);
     });
 
@@ -475,7 +481,7 @@ function updateMovement() {
     const delta = clock.getDelta();
     velocity.x -= velocity.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
-    velocity.y -= 9.8 * 10.0 * delta;
+    velocity.y -= 6.5 * 10.0 * delta;
 
     const moveZ = Number(moveBackward) - Number(moveForward);
     const moveX = Number(moveRight) - Number(moveLeft);
@@ -548,7 +554,7 @@ function onKeyDown(event) {
             break;
         case 'Space':
             if (canJump) {
-                velocity.y += 12;
+                velocity.y += 14;
                 canJump = false;
             }
             break;
