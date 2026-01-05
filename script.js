@@ -357,6 +357,7 @@ function spawnZombie() {
     hitbox.position.set(0, hitboxHeight / 2, 0);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
+    zombieGroup.hitbox = hitbox;
     zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
@@ -393,6 +394,8 @@ function shoot() {
     }
 
     let hitPoint = null;
+    let hitZombie = null;
+    let hitObject = null;
     if (currentAmmo > 0 && !reloading) {
         lastShotTime = now;
         currentAmmo--;
@@ -400,44 +403,62 @@ function shoot() {
 
         // Raycast from camera
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const zombieMeshes = [];
-        zombies.forEach(zombie => {
-            zombie.traverse(child => {
-                if (child.isMesh) {
-                    zombieMeshes.push(child);
-                }
-            });
-        });
-        const intersects = raycaster.intersectObjects(zombieMeshes, true);
+        const hitTargets = zombies
+            .map(zombie => zombie.hitbox || zombie)
+            .filter(Boolean);
+        const intersects = raycaster.intersectObjects(hitTargets, true);
 
         if (intersects.length > 0) {
-            let zombie = intersects[0].object;
-            if (zombie.userData.isHitbox && zombie.parent) {
-                zombie = zombie.parent;
+            hitObject = intersects[0].object;
+            let zombie = hitObject;
+            if (hitObject.userData.isHitbox && hitObject.parent) {
+                zombie = hitObject.parent;
             }
             hitPoint = intersects[0].point.clone();
             while (zombie && !zombies.includes(zombie)) {
                 zombie = zombie.parent;
             }
-            if (!zombie) {
-                return;
+            hitZombie = zombie || null;
+        }
+
+        if (!hitZombie) {
+            const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
+            const rayOrigin = camera.position.clone();
+            const hitRadius = targetZombieHeight * 0.6;
+            for (const zombie of zombies) {
+                const toZombie = zombie.position.clone().sub(rayOrigin);
+                const projection = toZombie.dot(direction);
+                if (projection <= 0) {
+                    continue;
+                }
+                const closestPoint = rayOrigin.clone().add(direction.clone().multiplyScalar(projection));
+                const distanceToRay = closestPoint.distanceTo(zombie.position);
+                if (distanceToRay <= hitRadius) {
+                    hitZombie = zombie;
+                    hitPoint = closestPoint.clone();
+                    hitObject = zombie;
+                    break;
+                }
             }
-            zombie.health--;
+        }
+
+        if (hitZombie) {
+            hitZombie.health--;
 
             // Flash zombie when hit
-            if (intersects[0].object.material) {
-                intersects[0].object.material.emissiveIntensity = 1;
+            if (hitObject && hitObject.material) {
+                hitObject.material.emissiveIntensity = 1;
             }
             setTimeout(() => {
-                if (intersects[0].object.material) {
-                    intersects[0].object.material.emissiveIntensity = 0.2;
+                if (hitObject && hitObject.material) {
+                    hitObject.material.emissiveIntensity = 0.2;
                 }
             }, 100);
 
-            if (zombie.health <= 0) {
-                spawnGibs(zombie.position);
-                scene.remove(zombie);
-                zombies = zombies.filter(z => z !== zombie);
+            if (hitZombie.health <= 0) {
+                spawnGibs(hitZombie.position);
+                scene.remove(hitZombie);
+                zombies = zombies.filter(z => z !== hitZombie);
                 kills++;
                 zombiesKilled++;
                 document.getElementById('killCount').textContent = kills;
