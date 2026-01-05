@@ -103,23 +103,39 @@ function init() {
 
 function loadZombieModel() {
     const loader = new THREE.GLTFLoader();
-    loader.setCrossOrigin('anonymous');
-    loader.load(
-        'https://www.domctorcheems.com/files/zombie.glb',
-        gltf => {
-            zombieModel = gltf.scene;
-            zombieModel.traverse(child => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-        },
-        undefined,
-        error => {
-            console.error('Failed to load zombie model.', error);
+    const sources = [
+        'assets/zombie.glb',
+        'https://www.domctorcheems.com/files/zombie.glb'
+    ];
+
+    const tryLoad = index => {
+        if (index >= sources.length) {
+            console.error('Failed to load zombie model from all sources.');
+            return;
         }
-    );
+
+        const source = sources[index];
+        loader.setCrossOrigin('anonymous');
+        loader.load(
+            source,
+            gltf => {
+                zombieModel = gltf.scene;
+                zombieModel.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+            },
+            undefined,
+            error => {
+                console.warn(`Failed to load zombie model from ${source}.`, error);
+                tryLoad(index + 1);
+            }
+        );
+    };
+
+    tryLoad(0);
 }
 
 function createWeapon() {
