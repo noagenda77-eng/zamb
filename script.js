@@ -342,18 +342,22 @@ function spawnZombie() {
         : zombieModel.clone(true);
 
     const unscaledBounds = new THREE.Box3().setFromObject(zombieGroup);
-    const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
+    const unscaledSize = new THREE.Vector3();
+    const unscaledCenter = new THREE.Vector3();
+    unscaledBounds.getSize(unscaledSize);
+    unscaledBounds.getCenter(unscaledCenter);
+    const unscaledHeight = Math.max(0.01, unscaledSize.y);
     const scale = targetZombieHeight / unscaledHeight;
     zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
-    const hitboxWorldHeight = Math.max(targetZombieHeight * 2.4, 1.2);
-    const hitboxWorldWidth = Math.max(targetZombieHeight * 0.6, 0.6);
-    const hitboxWorldDepth = Math.max(targetZombieHeight * 0.6, 0.6);
+    const hitboxHeight = Math.max(unscaledSize.y * 0.9, 0.6);
+    const hitboxWidth = Math.max(unscaledSize.x * 0.6, 0.4);
+    const hitboxDepth = Math.max(unscaledSize.z * 0.6, 0.4);
     const hitboxGeometry = new THREE.BoxGeometry(
-        hitboxWorldWidth,
-        hitboxWorldHeight,
-        hitboxWorldDepth
+        hitboxWidth,
+        hitboxHeight,
+        hitboxDepth
     );
     const hitboxMaterial = new THREE.MeshBasicMaterial({
         color: 0xff0000,
@@ -362,11 +366,10 @@ function spawnZombie() {
     });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
     hitbox.position.set(
-        0,
-        (hitboxWorldHeight / 2 + targetZombieHeight * 0.25) / scale,
-        0
+        unscaledCenter.x,
+        unscaledCenter.y + unscaledSize.y * 0.05,
+        unscaledCenter.z
     );
-    hitbox.scale.setScalar(1 / scale);
     hitbox.userData.isHitbox = true;
     zombieGroup.add(hitbox);
     zombieGroup.hitbox = hitbox;
