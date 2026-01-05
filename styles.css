@@ -106,6 +106,19 @@ body {
     z-index: 100;
 }
 
+#modelStatus {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    color: #ffb1b1;
+    text-shadow: 0 0 10px rgba(255, 80, 80, 0.6);
+    z-index: 120;
+    pointer-events: none;
+}
+
 #instructions {
     position: fixed;
     top: 50%;

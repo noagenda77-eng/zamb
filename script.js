@@ -104,11 +104,18 @@ function init() {
 
 function loadZombieModel() {
     const loader = new THREE.FBXLoader();
+    const statusEl = document.getElementById('modelStatus');
+    if (statusEl) {
+        statusEl.textContent = 'Loading zombie model from assets/zombies.fbx...';
+    }
     loader.load(
         'assets/zombies.fbx',
         fbx => {
             zombieModel = fbx;
             zombieAnimations = fbx.animations || [];
+            if (statusEl) {
+                statusEl.textContent = 'Zombie model loaded from assets/zombies.fbx.';
+            }
             zombieModel.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -122,6 +129,9 @@ function loadZombieModel() {
         undefined,
         error => {
             console.error('Failed to load zombie model from assets/zombies.fbx.', error);
+            if (statusEl) {
+                statusEl.textContent = 'Zombie model failed to load. Check console for details.';
+            }
         }
     );
 }
@@ -307,7 +317,9 @@ function spawnZombie() {
         return;
     }
 
-    const zombieGroup = zombieModel.clone(true);
+    const zombieGroup = THREE.SkeletonUtils
+        ? THREE.SkeletonUtils.clone(zombieModel)
+        : zombieModel.clone(true);
 
     const unscaledBounds = new THREE.Box3().setFromObject(zombieGroup);
     const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
