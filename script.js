@@ -17,7 +17,7 @@ let weaponBarrel;
 let gunshotAudio;
 let zombieModel = null;
 let zombieAnimations = [];
-const targetZombieHeight = 0.00588;
+const targetZombieHeight = 1.7;
 
 // Game state
 let gameStarted = false;
@@ -103,57 +103,27 @@ function init() {
 }
 
 function loadZombieModel() {
-    const loader = new THREE.GLTFLoader();
-    const sources = [
-        'assets/zombie.glb',
-        'https://www.domctorcheems.com/files/zombie.glb'
-    ];
-    const statusEl = document.getElementById('modelStatus');
-
-    const tryLoad = index => {
-        if (index >= sources.length) {
-            console.error('Failed to load zombie model from all sources.');
-            if (statusEl) {
-                statusEl.textContent = 'Zombie model failed to load. Check console for details.';
-            }
-            return;
-        }
-
-        const source = sources[index];
-        if (statusEl) {
-            statusEl.textContent = `Loading zombie model from ${source}...`;
-        }
-        loader.setCrossOrigin('anonymous');
-        loader.load(
-            source,
-            gltf => {
-                zombieModel = gltf.scene;
-                zombieAnimations = gltf.animations || [];
-                if (statusEl) {
-                    statusEl.textContent = `Zombie model loaded from ${source}.`;
-                }
-                zombieModel.traverse(child => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                        if (child.material) {
-                            child.material.side = THREE.DoubleSide;
-                        }
+    const loader = new THREE.FBXLoader();
+    loader.load(
+        'assets/zombies.fbx',
+        fbx => {
+            zombieModel = fbx;
+            zombieAnimations = fbx.animations || [];
+            zombieModel.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    if (child.material) {
+                        child.material.side = THREE.DoubleSide;
                     }
-                });
-            },
-            undefined,
-            error => {
-                console.warn(`Failed to load zombie model from ${source}.`, error);
-                if (statusEl) {
-                    statusEl.textContent = `Failed to load zombie model from ${source}. Trying next...`;
                 }
-                tryLoad(index + 1);
-            }
-        );
-    };
-
-    tryLoad(0);
+            });
+        },
+        undefined,
+        error => {
+            console.error('Failed to load zombie model from assets/zombies.fbx.', error);
+        }
+    );
 }
 
 function createWeapon() {
@@ -337,42 +307,14 @@ function spawnZombie() {
         return;
     }
 
-    const zombieGroup = THREE.SkeletonUtils
-        ? THREE.SkeletonUtils.clone(zombieModel)
-        : zombieModel.clone(true);
+    const zombieGroup = zombieModel.clone(true);
 
     const unscaledBounds = new THREE.Box3().setFromObject(zombieGroup);
-    const unscaledSize = new THREE.Vector3();
-    const unscaledCenter = new THREE.Vector3();
-    unscaledBounds.getSize(unscaledSize);
-    unscaledBounds.getCenter(unscaledCenter);
-    const unscaledHeight = Math.max(0.01, unscaledSize.y);
+    const unscaledHeight = Math.max(0.01, unscaledBounds.max.y - unscaledBounds.min.y);
     const scale = targetZombieHeight / unscaledHeight;
     zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
-    const hitboxHeight = Math.max(unscaledSize.y * 0.9, 0.6);
-    const hitboxWidth = Math.max(unscaledSize.x * 0.6, 0.4);
-    const hitboxDepth = Math.max(unscaledSize.z * 0.6, 0.4);
-    const hitboxGeometry = new THREE.BoxGeometry(
-        hitboxWidth,
-        hitboxHeight,
-        hitboxDepth
-    );
-    const hitboxMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        transparent: true,
-        opacity: 0
-    });
-    const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(
-        unscaledCenter.x,
-        unscaledCenter.y + unscaledSize.y * 0.05,
-        unscaledCenter.z
-    );
-    hitbox.userData.isHitbox = true;
-    zombieGroup.add(hitbox);
-    zombieGroup.hitbox = hitbox;
 
     // Spawn at random position away from player
     const angle = Math.random() * Math.PI * 2;
@@ -418,43 +360,16 @@ function shoot() {
 
         // Raycast from camera
         raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-        const hitTargets = zombies
-            .map(zombie => zombie.hitbox || zombie)
-            .filter(Boolean);
-        const intersects = raycaster.intersectObjects(hitTargets, true);
+        const intersects = raycaster.intersectObjects(zombies, true);
 
         if (intersects.length > 0) {
             hitObject = intersects[0].object;
             let zombie = hitObject;
-            if (hitObject.userData.isHitbox && hitObject.parent) {
-                zombie = hitObject.parent;
-            }
             hitPoint = intersects[0].point.clone();
             while (zombie && !zombies.includes(zombie)) {
                 zombie = zombie.parent;
             }
             hitZombie = zombie || null;
-        }
-
-        if (!hitZombie) {
-            const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
-            const rayOrigin = camera.position.clone();
-            const hitRadius = Math.max(targetZombieHeight * 0.6, 0.6);
-            for (const zombie of zombies) {
-                const toZombie = zombie.position.clone().sub(rayOrigin);
-                const projection = toZombie.dot(direction);
-                if (projection <= 0) {
-                    continue;
-                }
-                const closestPoint = rayOrigin.clone().add(direction.clone().multiplyScalar(projection));
-                const distanceToRay = closestPoint.distanceTo(zombie.position);
-                if (distanceToRay <= hitRadius) {
-                    hitZombie = zombie;
-                    hitPoint = closestPoint.clone();
-                    hitObject = zombie;
-                    break;
-                }
-            }
         }
 
         if (hitZombie) {
