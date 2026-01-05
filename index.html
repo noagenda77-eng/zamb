@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zombies FPS</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="crosshair"></div>
+
+    <div id="hud">
+        <div id="ammo">
+            <span id="currentAmmo">30</span>
+            <span class="separator">/</span>
+            <span id="reserveAmmo">120</span>
+        </div>
+    </div>
+
+    <div id="round">Round <span id="roundNumber">1</span></div>
+    <div id="damageOverlay"></div>
+    <div id="kills">Kills: <span id="killCount">0</span></div>
+
+    <div id="gameOver">
+        <h1>Game Over</h1>
+        <p>Round: <span id="finalRound">1</span></p>
+        <p>Kills: <span id="finalKills">0</span></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <div id="instructions">
+        <h2>Zombies FPS</h2>
+        <p><strong>WASD</strong> - Move</p>
+        <p><strong>Mouse</strong> - Look Around</p>
+        <p><strong>Left Click</strong> - Shoot</p>
+        <p><strong>R</strong> - Reload</p>
+        <p><strong>Space</strong> - Jump</p>
+        <p><strong>Shift</strong> - Sprint</p>
+        <p>Click to start and lock mouse</p>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+    <script src="script.js" defer></script>
+</body>
+</html>
