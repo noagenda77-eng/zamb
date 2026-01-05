@@ -3,6 +3,7 @@ let zombies = [];
 let buildings = [];
 let bullets = [];
 let lights = [];
+let gibs = [];
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
@@ -361,6 +362,7 @@ function shoot() {
         return;
     }
 
+    let hitPoint = null;
     if (currentAmmo > 0 && !reloading) {
         lastShotTime = now;
         currentAmmo--;
@@ -372,6 +374,7 @@ function shoot() {
 
         if (intersects.length > 0) {
             let zombie = intersects[0].object;
+            hitPoint = intersects[0].point.clone();
             while (zombie && !zombies.includes(zombie)) {
                 zombie = zombie.parent;
             }
@@ -391,6 +394,7 @@ function shoot() {
             }, 100);
 
             if (zombie.health <= 0) {
+                spawnGibs(zombie.position);
                 scene.remove(zombie);
                 zombies = zombies.filter(z => z !== zombie);
                 kills++;
@@ -405,7 +409,7 @@ function shoot() {
 
         // Muzzle flash
         createMuzzleFlash();
-        createTracer();
+        createTracer(hitPoint);
         if (gunshotAudio) {
             gunshotAudio.currentTime = 0;
             gunshotAudio.play().catch(() => {});
@@ -426,7 +430,7 @@ function createMuzzleFlash() {
     setTimeout(() => scene.remove(flashLight), 50);
 }
 
-function createTracer() {
+function createTracer(hitPoint) {
     const direction = camera.getWorldDirection(new THREE.Vector3()).normalize();
     const start = new THREE.Vector3();
     if (weaponBarrel) {
@@ -434,7 +438,13 @@ function createTracer() {
     } else {
         start.copy(camera.position).add(direction.clone().multiplyScalar(0.6));
     }
-    const end = start.clone().add(direction.multiplyScalar(24));
+    let end = start.clone().add(direction.clone().multiplyScalar(24));
+    if (hitPoint) {
+        const toHit = hitPoint.clone().sub(start);
+        if (toHit.dot(direction) > 0.1) {
+            end = hitPoint.clone();
+        }
+    }
     const tracerGeometry = new THREE.BufferGeometry().setFromPoints([start, end]);
     const tracerMaterial = new THREE.LineBasicMaterial({
         color: 0xffdd88,
@@ -520,6 +530,49 @@ function updateLights() {
             lightObj.flickerTime += 0.1;
             lightObj.light.intensity = 1.5 + Math.sin(lightObj.flickerTime) * 0.5 + Math.random() * 0.3;
         }
+    });
+}
+
+function spawnGibs(position) {
+    const gibCount = 8 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < gibCount; i++) {
+        const gibGeometry = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+        const gibMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2a0f0f,
+            emissive: 0x120000,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+        const gib = new THREE.Mesh(gibGeometry, gibMaterial);
+        gib.position.set(position.x, 0.8 + Math.random() * 0.6, position.z);
+        gib.castShadow = true;
+        gib.receiveShadow = true;
+        const velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 4,
+            2 + Math.random() * 3,
+            (Math.random() - 0.5) * 4
+        );
+        gibs.push({ mesh: gib, velocity, life: 1.2 + Math.random() * 0.6 });
+        scene.add(gib);
+    }
+}
+
+function updateGibs(delta) {
+    gibs = gibs.filter(gib => {
+        gib.velocity.y -= 9.8 * delta;
+        gib.mesh.position.addScaledVector(gib.velocity, delta);
+        if (gib.mesh.position.y < 0.05) {
+            gib.mesh.position.y = 0.05;
+            gib.velocity.y *= -0.3;
+            gib.velocity.x *= 0.6;
+            gib.velocity.z *= 0.6;
+        }
+        gib.life -= delta;
+        if (gib.life <= 0) {
+            scene.remove(gib.mesh);
+            return false;
+        }
+        return true;
     });
 }
 
@@ -687,6 +740,7 @@ function animate() {
     updateMovement(delta);
     updateZombies();
     updateLights();
+    updateGibs(delta);
     updateHealthRegen(delta);
     updateDamageOverlay();
 
