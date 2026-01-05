@@ -347,7 +347,7 @@ function spawnZombie() {
     zombieGroup.scale.setScalar(scale);
     const zombieBounds = new THREE.Box3().setFromObject(zombieGroup);
     const groundOffset = -zombieBounds.min.y;
-    const hitboxWorldHeight = Math.max(targetZombieHeight * 1.2, 1.2);
+    const hitboxWorldHeight = Math.max(targetZombieHeight * 2.4, 1.2);
     const hitboxWorldWidth = Math.max(targetZombieHeight * 0.6, 0.6);
     const hitboxWorldDepth = Math.max(targetZombieHeight * 0.6, 0.6);
     const hitboxGeometry = new THREE.BoxGeometry(
