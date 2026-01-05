@@ -107,19 +107,29 @@ function loadZombieModel() {
         'assets/zombie.glb',
         'https://www.domctorcheems.com/files/zombie.glb'
     ];
+    const statusEl = document.getElementById('modelStatus');
 
     const tryLoad = index => {
         if (index >= sources.length) {
             console.error('Failed to load zombie model from all sources.');
+            if (statusEl) {
+                statusEl.textContent = 'Zombie model failed to load. Check console for details.';
+            }
             return;
         }
 
         const source = sources[index];
+        if (statusEl) {
+            statusEl.textContent = `Loading zombie model from ${source}...`;
+        }
         loader.setCrossOrigin('anonymous');
         loader.load(
             source,
             gltf => {
                 zombieModel = gltf.scene;
+                if (statusEl) {
+                    statusEl.textContent = `Zombie model loaded from ${source}.`;
+                }
                 zombieModel.traverse(child => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -130,6 +140,9 @@ function loadZombieModel() {
             undefined,
             error => {
                 console.warn(`Failed to load zombie model from ${source}.`, error);
+                if (statusEl) {
+                    statusEl.textContent = `Failed to load zombie model from ${source}. Trying next...`;
+                }
                 tryLoad(index + 1);
             }
         );
